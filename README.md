@@ -23,7 +23,7 @@ UGREEN NAS: Caddy (Cloudflare DNS-01)
 - Vaultwarden 使用 SQLite，适合个人/家庭规模并降低恢复复杂度。
 - Joplin 使用专用的 Joplin Server 和 PostgreSQL。
 - PostgreSQL、Vaultwarden 和 Joplin Server 均不发布宿主机端口。
-- VPS 通过 Tailscale Grants 只能访问 NAS 的 TCP 8443。
+- 应用 Tailscale Grants 并移除重叠的宽泛授权后，VPS 只能访问 NAS 的 TCP 8443；部署服务本身不会自动修改整个 tailnet 的策略。
 - 镜像版本通过 `.env` 显式指定，升级前先备份。
 
 ## 快速开始
@@ -36,6 +36,8 @@ UGREEN NAS: Caddy (Cloudflare DNS-01)
 6. 按 [迁移说明](docs/migration.md) 迁移现有 Vaultwarden 和 Joplin。
 
 公开发布前阅读 [隐私检查](docs/privacy.md)。真实域名只应存在于被 Git 忽略的本地配置中。
+
+更换服务器按 [VPS 重部署](docs/replace-vps.md) 操作。干净 Ubuntu VPS 可使用原生 HAProxy 初始化脚本；有现有网站时使用共存配置。
 
 ## 重要目录
 

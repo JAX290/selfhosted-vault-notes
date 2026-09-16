@@ -1,0 +1,4 @@
+# Offline alternative: caddy-patched must come from the official Caddy build API,
+# its version/modules and SHA-256 must be verified before building.
+FROM ghcr.io/caddy-dns/cloudflare:v0.2.4
+COPY --chmod=755 caddy-patched /usr/bin/caddy

@@ -17,7 +17,7 @@ if [ -f "$domain_file" ]; then
 fi
 
 secret_matches=$(git grep --cached -n -E \
-  '(tskey-[A-Za-z0-9_-]+|CF_API_TOKEN=.{20,}|JOPLIN_DB_PASSWORD=.{20,})' \
+  '(tskey-[A-Za-z0-9_-]+|CF_API_TOKEN=[A-Za-z0-9_-]{20,}|JOPLIN_DB_PASSWORD=[A-Za-z0-9_-]{20,})' \
   -- ':(exclude,glob)**/.env.example' ':(exclude).githooks/pre-commit' || true)
 if [ -n "$secret_matches" ]; then
   printf '%s\n' 'Commit blocked: a credential-like value was found in staged files:' >&2

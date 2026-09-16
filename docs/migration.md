@@ -26,3 +26,8 @@
 
 如果原来已经开启 E2EE，保留主密钥密码。迁移不会替你恢复遗失的 E2EE 密钥。
 
+JEX 不包含笔记历史；因此必须保留完整 profile 备份和旧 WebDAV 数据。完成另一台设备的恢复验证之前，不删除原 profile。
+
+### 保留 Vaultwarden 旧 Tailscale 地址
+
+旧容器停止后，可使用 `docker compose -f compose.yaml -f compose.compat.yaml up -d --no-build vaultwarden`，将新实例绑定到主机回环地址的 8080 端口，再把现有 Tailscale Serve HTTPS 代理指向 `http://127.0.0.1:8080`。旧地址和新域名由此使用同一数据库。日后更新时继续包含这个 override 文件，直到所有客户端都迁移完成。
