@@ -1,0 +1,40 @@
+{
+	email {$ACME_EMAIL}
+	admin off
+}
+
+{$VAULT_DOMAIN} {
+	tls {
+		dns cloudflare {$CF_API_TOKEN}
+	}
+
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "no-referrer"
+		-Server
+	}
+
+	@admin path /admin /admin/*
+	respond @admin 404
+
+	reverse_proxy vaultwarden:80
+}
+
+{$NOTES_DOMAIN} {
+	tls {
+		dns cloudflare {$CF_API_TOKEN}
+	}
+
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "same-origin"
+		-Server
+	}
+
+	reverse_proxy joplin:22300
+}
+

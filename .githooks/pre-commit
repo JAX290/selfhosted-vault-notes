@@ -1,0 +1,28 @@
+#!/bin/sh
+set -eu
+
+domain_file=.private/domain
+if [ -f "$domain_file" ]; then
+  IFS= read -r private_domain < "$domain_file" || true
+  carriage_return=$(printf '\r')
+  private_domain=${private_domain%"$carriage_return"}
+  if [ -n "$private_domain" ]; then
+    matches=$(git grep --cached -n -F "$private_domain" -- ':!.private/*' || true)
+    if [ -n "$matches" ]; then
+      printf '%s\n' 'Commit blocked: private domain found in staged files:' >&2
+      printf '%s\n' "$matches" >&2
+      exit 1
+    fi
+  fi
+fi
+
+secret_matches=$(git grep --cached -n -E \
+  '(tskey-[A-Za-z0-9_-]+|CF_API_TOKEN=.{20,}|JOPLIN_DB_PASSWORD=.{20,})' \
+  -- ':(exclude,glob)**/.env.example' ':(exclude).githooks/pre-commit' || true)
+if [ -n "$secret_matches" ]; then
+  printf '%s\n' 'Commit blocked: a credential-like value was found in staged files:' >&2
+  printf '%s\n' "$secret_matches" >&2
+  exit 1
+fi
+
+printf '%s\n' 'Privacy pre-commit check passed.'

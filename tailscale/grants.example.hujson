@@ -1,0 +1,33 @@
+{
+  // 在 Tailscale 管理后台先允许对应账号分配这两个标签。
+  "tagOwners": {
+    "tag:vps-gateway": ["autogroup:admin"],
+    "tag:nas-services": ["autogroup:admin"],
+  },
+
+  "grants": [
+    // 公网 VPS 只能连接 NAS 的 TLS 入口。
+    {
+      "src": ["tag:vps-gateway"],
+      "dst": ["tag:nas-services"],
+      "ip": ["tcp:8443"],
+    },
+
+    // 管理员设备可通过 Tailscale 管理两台主机。
+    // 如果不需要远程 SSH，请删除 tcp:22。
+    {
+      "src": ["autogroup:admin"],
+      "dst": ["tag:vps-gateway", "tag:nas-services"],
+      "ip": ["tcp:22"],
+    },
+  ],
+
+  "tests": [
+    {
+      "src": "tag:vps-gateway",
+      "accept": ["tag:nas-services:8443"],
+      "deny": ["tag:nas-services:22", "tag:nas-services:5432"],
+    },
+  ],
+}
+

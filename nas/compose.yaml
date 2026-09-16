@@ -1,0 +1,108 @@
+name: vault-notes
+
+services:
+  caddy:
+    build:
+      context: ./caddy
+      args:
+        CADDY_VERSION: "2.11.3"
+        CLOUDFLARE_PLUGIN_VERSION: "v0.2.4"
+    image: local/caddy-cloudflare:2.11.3
+    container_name: vault-notes-caddy
+    restart: unless-stopped
+    environment:
+      VAULT_DOMAIN: ${VAULT_DOMAIN:?set VAULT_DOMAIN in .env}
+      NOTES_DOMAIN: ${NOTES_DOMAIN:?set NOTES_DOMAIN in .env}
+      ACME_EMAIL: ${ACME_EMAIL:?set ACME_EMAIL in .env}
+      CF_API_TOKEN: ${CF_API_TOKEN:?set CF_API_TOKEN in .env}
+    ports:
+      - "${NAS_TAILSCALE_IP:?set NAS_TAILSCALE_IP in .env}:${NAS_TLS_PORT:-8443}:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./data/caddy/data:/data
+      - ./data/caddy/config:/config
+    depends_on:
+      vaultwarden:
+        condition: service_started
+      joplin:
+        condition: service_started
+    networks:
+      - frontend
+    security_opt:
+      - no-new-privileges:true
+
+  vaultwarden:
+    image: ${VAULTWARDEN_IMAGE}
+    container_name: vaultwarden
+    restart: unless-stopped
+    environment:
+      DOMAIN: https://${VAULT_DOMAIN}
+      SIGNUPS_ALLOWED: "false"
+      INVITATIONS_ALLOWED: "false"
+      SHOW_PASSWORD_HINT: "false"
+      LOG_LEVEL: warn
+      EXTENDED_LOGGING: "true"
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_FROM: ${SMTP_FROM:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_SECURITY: ${SMTP_SECURITY:-starttls}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+    volumes:
+      - ./data/vaultwarden:/data
+    expose:
+      - "80"
+    networks:
+      - frontend
+    security_opt:
+      - no-new-privileges:true
+
+  joplin:
+    image: ${JOPLIN_IMAGE}
+    container_name: joplin-server
+    restart: unless-stopped
+    environment:
+      APP_PORT: "22300"
+      APP_BASE_URL: https://${NOTES_DOMAIN}
+      DB_CLIENT: pg
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_DATABASE: ${JOPLIN_DB_NAME}
+      POSTGRES_USER: ${JOPLIN_DB_USER}
+      POSTGRES_PASSWORD: ${JOPLIN_DB_PASSWORD}
+    expose:
+      - "22300"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - frontend
+      - database
+    security_opt:
+      - no-new-privileges:true
+
+  postgres:
+    image: ${POSTGRES_IMAGE}
+    container_name: joplin-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${JOPLIN_DB_NAME}
+      POSTGRES_USER: ${JOPLIN_DB_USER}
+      POSTGRES_PASSWORD: ${JOPLIN_DB_PASSWORD}
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    networks:
+      - database
+    security_opt:
+      - no-new-privileges:true
+
+networks:
+  frontend:
+  database:
+    internal: true
