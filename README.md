@@ -39,6 +39,51 @@ UGREEN NAS: Caddy (Cloudflare DNS-01)
 
 更换服务器按 [VPS 重部署](docs/replace-vps.md) 操作。干净 Ubuntu VPS 可使用原生 HAProxy 初始化脚本；有现有网站时使用共存配置。
 
+## 新 VPS 快速部署（NAS 已部署）
+
+适用于全新的 Ubuntu 24.04 VPS，使用 root 执行。NAS 上的应用、数据和证书保持原位置，无需重新部署 NAS。先保留旧 VPS。
+
+```bash
+apt-get update
+apt-get install -y git
+git clone https://github.com/JAX290/selfhosted-vault-notes.git /root/selfhosted-vault-notes
+cd /root/selfhosted-vault-notes
+
+cp vps/host.env.example vps/host.env
+read -r -p '请输入 NAS 的 Tailscale IPv4 地址: ' NAS_IP
+sed -i "s/^NAS_TAILSCALE_IP=.*/NAS_TAILSCALE_IP=$NAS_IP/" vps/host.env
+sh scripts/bootstrap-vps.sh
+```
+
+首次执行会安装 HAProxy 和 Tailscale；若提示未登录，执行：
+
+```bash
+tailscale up
+```
+
+打开命令输出的授权链接，将新 VPS 加入 NAS 所在的同一个 tailnet。确认访问策略允许新 VPS 连接 NAS 的 TCP 8443，再执行：
+
+```bash
+cd /root/selfhosted-vault-notes
+sh scripts/bootstrap-vps.sh
+systemctl status vault-notes-edge --no-pager
+```
+
+确保 VPS 防火墙和云厂商安全组允许 TCP 80、443。修改 DNS 前，填写新 VPS 公网 IP 和现有的两个真实域名，验证 HTTPS：
+
+```bash
+read -r -p '新 VPS 公网 IPv4: ' NEW_IP
+read -r -p 'Vaultwarden 域名（不含 https://）: ' VAULT_DOMAIN
+read -r -p 'Joplin 域名（不含 https://）: ' NOTES_DOMAIN
+
+curl --fail --resolve "$VAULT_DOMAIN:443:$NEW_IP" "https://$VAULT_DOMAIN/alive"
+curl --fail --resolve "$NOTES_DOMAIN:443:$NEW_IP" "https://$NOTES_DOMAIN/api/ping"
+```
+
+两项均通过后，将 Cloudflare 中这两个域名的 A 记录改为新 VPS 公网 IPv4，保持灰云（仅 DNS）。如存在指向旧 VPS 的 AAAA 记录，需同步处理，避免客户端仍通过 IPv6 访问旧节点。验证电脑和手机同步正常后，再退役旧 VPS 并移除旧 Tailscale 节点。
+
+APP 的服务器地址、账户和密码保持不变。真实域名和 NAS IP 只填写在本机配置中，不提交到 GitHub。脚本会拒绝在已有 80/443 监听的服务器上部署；详细流程见 [更换 VPS](docs/replace-vps.md)。
+
 ## 重要目录
 
 | 路径 | 用途 |
