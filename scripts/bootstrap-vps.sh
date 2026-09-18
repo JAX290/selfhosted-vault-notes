@@ -11,7 +11,15 @@ if ss -H -lnt '( sport = :80 or sport = :443 )' | grep -q .; then
   exit 1
 fi
 apt-get update
+new_haproxy=true
+if dpkg-query -W -f='${Status}' haproxy 2>/dev/null | grep -q '^install ok installed$'; then
+  new_haproxy=false
+fi
 DEBIAN_FRONTEND=noninteractive apt-get install -y haproxy curl ca-certificates
+if [ "$new_haproxy" = true ]; then
+  # The package may start its sample listener. This deployment uses its own unit.
+  systemctl disable --now haproxy.service
+fi
 if ! command -v tailscale >/dev/null 2>&1; then
   curl -fsSL https://pkgs.tailscale.com/stable/ubuntu/noble.noarmor.gpg -o /usr/share/keyrings/tailscale-archive-keyring.gpg
   curl -fsSL https://pkgs.tailscale.com/stable/ubuntu/noble.tailscale-keyring.list -o /etc/apt/sources.list.d/tailscale.list
@@ -24,7 +32,8 @@ install -m 644 "$root_dir/vps/haproxy-standalone.cfg" /opt/vault-notes/haproxy.c
 install -m 644 "$root_dir/vps/vault-notes-edge.service" /etc/systemd/system/vault-notes-edge.service
 systemctl daemon-reload
 if ! tailscale ip -4 >/dev/null 2>&1; then
-  echo 'Run tailscale up --advertise-tags=tag:vps-gateway, authorize it, then rerun this script'
+  echo 'Run tailscale up, authorize it in your existing tailnet, then rerun this script'
+  echo 'Advertise tag:vps-gateway only after configuring its tag owner and grants'
   exit 1
 fi
 set -a
