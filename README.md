@@ -41,7 +41,11 @@ UGREEN NAS: Caddy (Cloudflare DNS-01)
 
 ## 新 VPS 快速部署（NAS 已部署）
 
-适用于全新的 Ubuntu 24.04 VPS，使用 root 执行。NAS 上的应用、数据和证书保持原位置，无需重新部署 NAS。先保留旧 VPS。
+适用于全新的 Ubuntu 24.04 VPS。NAS 上的应用、数据和证书保持原位置，无需重新部署 NAS。先保留旧 VPS。
+
+### VPS 已安装并认证 Tailscale
+
+如果新 VPS 已加入 NAS 所在的同一个 tailnet，使用 root 直接执行以下完整命令：
 
 ```bash
 apt-get update
@@ -50,12 +54,27 @@ git clone https://github.com/JAX290/selfhosted-vault-notes.git /root/selfhosted-
 cd /root/selfhosted-vault-notes
 
 cp vps/host.env.example vps/host.env
-read -r -p '请输入 NAS 的 Tailscale IPv4 地址: ' NAS_IP
-sed -i "s/^NAS_TAILSCALE_IP=.*/NAS_TAILSCALE_IP=$NAS_IP/" vps/host.env
+sed -i 's/^NAS_TAILSCALE_IP=.*/NAS_TAILSCALE_IP=100.64.0.10/' vps/host.env
 sh scripts/bootstrap-vps.sh
 ```
 
-首次执行会安装 HAProxy 和 Tailscale；若提示未登录，执行：
+无需再次运行 `tailscale up`。脚本会安装 HAProxy、写入网关服务并立即启动。成功时显示 `Gateway started; validate HTTPS before changing DNS`。
+
+如果仓库已经下载过，只需执行：
+
+```bash
+cd /root/selfhosted-vault-notes
+git pull --ff-only
+cp -n vps/host.env.example vps/host.env
+sed -i 's/^NAS_TAILSCALE_IP=.*/NAS_TAILSCALE_IP=100.64.0.10/' vps/host.env
+sh scripts/bootstrap-vps.sh
+```
+
+上面的 `100.64.0.10` 是示例地址，执行前必须替换为自己 NAS 的 Tailscale IPv4。NAS 更换节点或 Tailscale IPv4 发生变化时，应填写新地址。
+
+### VPS 尚未安装或认证 Tailscale
+
+先按上一节运行部署命令。首次执行会安装 Tailscale；若提示未登录，执行：
 
 ```bash
 tailscale up
