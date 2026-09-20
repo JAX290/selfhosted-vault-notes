@@ -10,4 +10,4 @@ NAS 数据、证书和 Cloudflare Token 不需要迁移。先保留旧 VPS。
 6. 两项健康检查通过后，修改 Cloudflare A 记录，保持灰云。
 7. 验证手机与电脑同步后，退役旧 VPS 并移除旧 Tailscale 节点。
 
-有现有网站的 VPS 使用 haproxy-coexist.cfg，需要人工核对网卡绑定和原网站回环监听，不能直接运行独立模式脚本。
+有现有网站、挖矿中转或系统 HAProxy 的 VPS，先人工核对网卡绑定和原网站回环监听，再填写 `vps/coexist.env` 并运行 `sh scripts/bootstrap-vps-coexist.sh`。该脚本使用独立服务，不覆盖系统 HAProxy 配置，也不修改挖矿端口。

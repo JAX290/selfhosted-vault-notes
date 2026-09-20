@@ -103,6 +103,22 @@ curl --fail --resolve "$NOTES_DOMAIN:443:$NEW_IP" "https://$NOTES_DOMAIN/api/pin
 
 APP 的服务器地址、账户和密码保持不变。真实域名和 NAS IP 只填写在本机配置中，不提交到 GitHub。脚本会拒绝在已有 80/443 监听的服务器上部署；详细流程见 [更换 VPS](docs/replace-vps.md)。
 
+### VPS 已有网站、挖矿中转或其他 HAProxy 服务
+
+不要运行独立模式脚本，也不要修改已有挖矿端口。共存模式让原 Nginx 保留 `127.0.0.1:443`，新的独立 HAProxy 仅接管公网网卡的 443，并按 TLS SNI 分流：两个应用域名转到 NAS `8443`，其他域名回到原 Nginx。原系统 HAProxy 及其挖矿端口不变。
+
+先检查现有 Nginx 配置，确认其同时有回环 443 和一个明确的公网网卡 443 监听；本脚本不支持只有 `0.0.0.0:443` 的未经审查配置。然后执行：
+
+```bash
+cd /root/selfhosted-vault-notes
+git pull --ff-only
+cp vps/coexist.env.example vps/coexist.env
+nano vps/coexist.env
+sh scripts/bootstrap-vps-coexist.sh
+```
+
+填写 VPS 网卡地址、两个域名、NAS Tailscale 地址、原 Nginx 配置文件及原网站预期状态码。脚本先验证 NAS、Nginx 和系统 HAProxy，备份 Nginx 配置，再切换公网 443；任一健康检查失败会恢复原 Nginx 配置。`vps/coexist.env` 被 Git 忽略。
+
 ## 重要目录
 
 | 路径 | 用途 |
