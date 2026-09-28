@@ -6,7 +6,11 @@ test "$(id -u)" -eq 0 || { echo 'Run as root'; exit 1; }
 test "$ID" = ubuntu && test "$VERSION_ID" = 24.04 || { echo 'Ubuntu 24.04 required'; exit 1; }
 root_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 test -f "$root_dir/vps/host.env" || { echo 'Copy vps/host.env.example to vps/host.env and fill it first'; exit 1; }
-if ss -H -lnt '( sport = :80 or sport = :443 )' | grep -q .; then
+edge_ip=$(ip -4 route get 1.1.1.1 | awk '{for (i=1;i<=NF;i++) if ($i=="src") {print $(i+1); exit}}')
+if ss -H -lnt '( sport = :80 or sport = :443 )' | awk -v ip="$edge_ip" '
+  $4 ~ /^(0\.0\.0\.0|\*|\[::\]):(80|443)$/ || $4 == ip ":80" || $4 == ip ":443" { found=1 }
+  END { exit !found }
+'; then
   echo 'Existing 80/443 listener found; use reviewed coexist configuration instead'
   exit 1
 fi

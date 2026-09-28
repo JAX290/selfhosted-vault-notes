@@ -21,10 +21,10 @@ test -f "$NGINX_SITE"
 systemctl is-active --quiet nginx
 systemctl is-active --quiet haproxy
 tailscale ip -4 >/dev/null
-curl --fail --silent --show-error --max-time 20 "https://${VAULT_DOMAIN}:8443/alive" \
-  --resolve "${VAULT_DOMAIN}:8443:${NAS_TAILSCALE_IP}" >/dev/null
-curl --fail --silent --show-error --max-time 20 "https://${NOTES_DOMAIN}:8443/api/ping" \
-  --resolve "${NOTES_DOMAIN}:8443:${NAS_TAILSCALE_IP}" -H "Host: ${NOTES_DOMAIN}" >/dev/null
+curl --fail --silent --show-error --max-time 20 "https://${VAULT_DOMAIN}:${NAS_TLS_PORT}/alive" \
+  --resolve "${VAULT_DOMAIN}:${NAS_TLS_PORT}:${NAS_TAILSCALE_IP}" >/dev/null
+curl --fail --silent --show-error --max-time 20 "https://${NOTES_DOMAIN}:${NAS_TLS_PORT}/api/ping" \
+  --resolve "${NOTES_DOMAIN}:${NAS_TLS_PORT}:${NAS_TAILSCALE_IP}" -H "Host: ${NOTES_DOMAIN}" >/dev/null
 install -d -m 755 /opt/vault-notes
 install -m 644 "$root_dir/vps/haproxy-coexist.cfg" /opt/vault-notes/haproxy.cfg
 install -m 644 "$root_dir/vps/vault-notes-edge.service" /etc/systemd/system/vault-notes-edge.service

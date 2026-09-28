@@ -43,6 +43,19 @@ UGREEN NAS: Caddy (Cloudflare DNS-01)
 
 适用于全新的 Ubuntu 24.04 VPS。NAS 上的应用、数据和证书保持原位置，无需重新部署 NAS。先保留旧 VPS。
 
+### 推荐：统一一键入口
+
+新 VPS 已安装并认证 Tailscale 后，以 root 执行：
+
+```bash
+apt-get update && apt-get install -y git
+git clone https://github.com/JAX290/selfhosted-vault-notes.git /root/selfhosted-vault-notes 2>/dev/null || \
+  git -C /root/selfhosted-vault-notes pull --ff-only
+sh /root/selfhosted-vault-notes/scripts/install-vps-gateway.sh
+```
+
+脚本询问 NAS 的 Tailscale IPv4。若发现公网 80/443 空闲，会选择独立模式；若发现已有 Nginx 和系统 HAProxy，会识别公网网卡、原 Nginx 站点，询问两个应用域名后使用共存模式。共存模式不修改系统 HAProxy 配置和挖矿端口，失败时恢复 Nginx。真实地址只写入被 Git 忽略的私有配置。
+
 ### VPS 已安装并认证 Tailscale
 
 如果新 VPS 已加入 NAS 所在的同一个 tailnet，使用 root 直接执行以下完整命令：
