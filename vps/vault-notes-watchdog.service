@@ -1,0 +1,12 @@
+[Unit]
+Description=Vaultwarden and Joplin path watchdog
+After=network-online.target tailscaled.service vault-notes-edge.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/opt/vault-notes/watchdog-vps.sh
+NoNewPrivileges=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/vault-notes-watchdog /run

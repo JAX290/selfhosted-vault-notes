@@ -34,6 +34,7 @@ UGREEN NAS: Caddy (Cloudflare DNS-01)
 4. 应用 [Tailscale Grants](tailscale/grants.example.hujson)。
 5. 修改 Cloudflare DNS 后执行 `scripts/health-check.sh`。
 6. 按 [迁移说明](docs/migration.md) 迁移现有 Vaultwarden 和 Joplin。
+7. 按 [线路看门狗](docs/watchdog.md) 启用 VPS 与 NAS 的自动检查和恢复。
 
 公开发布前阅读 [隐私检查](docs/privacy.md)。真实域名只应存在于被 Git 忽略的本地配置中。
 
@@ -141,6 +142,10 @@ sh scripts/bootstrap-vps-coexist.sh
 | `tailscale/` | 最小权限策略模板 |
 | `scripts/` | 配置检查、健康检查和停机一致性备份 |
 | `docs/` | 安装、迁移、备份恢复和升级说明 |
+
+## 线路自检与自动恢复
+
+VPS 和 NAS 可分别安装两分钟一次的看门狗。连续两次失败后才恢复相关组件；VPS 看门狗只操作 Tailscale 与独立的 `vault-notes-edge`，不会修改或重启挖矿使用的系统 HAProxy。安装和排查方法见 [线路看门狗](docs/watchdog.md)。
 
 ## 仓库与秘密
 

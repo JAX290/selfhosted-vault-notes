@@ -45,4 +45,5 @@ set -a
 set +a
 haproxy -c -f /opt/vault-notes/haproxy.cfg
 systemctl enable --now vault-notes-edge
+sh "$root_dir/scripts/install-vps-watchdog.sh"
 echo 'Gateway started; validate HTTPS before changing DNS'

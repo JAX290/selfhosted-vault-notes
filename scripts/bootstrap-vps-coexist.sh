@@ -82,4 +82,5 @@ status=$(curl --silent --show-error --resolve "${EXISTING_TEST_DOMAIN}:443:${EDG
   "https://${EXISTING_TEST_DOMAIN}/" -o /dev/null -w '%{http_code}')
 test "$status" = "$EXISTING_EXPECTED_STATUS"
 trap - EXIT INT TERM
+sh "$root_dir/scripts/install-vps-watchdog.sh"
 echo 'Coexist gateway active; existing HAProxy and website checks passed.'
